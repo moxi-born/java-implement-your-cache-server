@@ -1,5 +1,7 @@
 package com.moxib.cache;
 
+import io.vertx.core.json.JsonObject;
+
 public interface Cache {
   /**
    * 根据key获取
@@ -25,8 +27,7 @@ public interface Cache {
    */
   Stat getStat();
 
-  enum CacheType {
-    MEMORY,
-    ROCKSDB;
+  static Cache createCache(JsonObject config) throws Exception {
+    return CacheFactory.newCache(config);
   }
 }

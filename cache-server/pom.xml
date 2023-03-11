@@ -18,6 +18,9 @@
 
     <vertx.version>4.3.8</vertx.version>
     <junit-jupiter.version>5.9.1</junit-jupiter.version>
+    <jackson.version>2.14.2</jackson.version>
+    <logback.version>1.2.11</logback.version>
+    <rocksdb.version>5.18.4</rocksdb.version>
 
     <main.verticle>com.moxib.MainVerticle</main.verticle>
     <launcher.class>io.vertx.core.Launcher</launcher.class>
@@ -42,17 +45,22 @@
     </dependency>
     <dependency>
       <groupId>io.vertx</groupId>
-      <artifactId>vertx-shell</artifactId>
+      <artifactId>vertx-web</artifactId>
     </dependency>
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
-      <version>2.14.2</version>
+      <version>${jackson.version}</version>
     </dependency>
     <dependency>
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-classic</artifactId>
-      <version>1.2.11</version>
+      <version>${logback.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.rocksdb</groupId>
+      <artifactId>rocksdbjni</artifactId>
+      <version>${rocksdb.version}</version>
     </dependency>
 
     <dependency>

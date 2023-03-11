@@ -1,0 +1,8 @@
+{
+  "server" : {
+    "port": 12346
+  },
+  "cache" : {
+    "type": "rocksDb"
+  }
+}

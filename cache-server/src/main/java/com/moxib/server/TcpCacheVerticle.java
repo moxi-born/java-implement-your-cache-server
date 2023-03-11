@@ -15,6 +15,8 @@ import java.nio.charset.StandardCharsets;
 
 public class TcpCacheVerticle extends AbstractVerticle {
   private static final Logger logger = LoggerFactory.getLogger(TcpCacheVerticle.class);
+  private static final Buffer PONG = Buffer.buffer(new byte[]{(byte) 1});
+
   private final Cache cache;
 
   public TcpCacheVerticle(Cache cache) {
@@ -118,7 +120,7 @@ public class TcpCacheVerticle extends AbstractVerticle {
     logger.debug("key is {}", new String(key, StandardCharsets.UTF_8));
     logger.debug("value is {}", new String(value, StandardCharsets.UTF_8));
     cache.set(key, value);
-    socket.write("1");
+    socket.write(PONG);
   }
 
   /**
@@ -133,6 +135,8 @@ public class TcpCacheVerticle extends AbstractVerticle {
     byte[] value = cache.get(key);
     if(null != value) {
       socket.write(new String(value, StandardCharsets.UTF_8));
+    } else {
+      socket.write(PONG);
     }
   }
 
@@ -146,6 +150,6 @@ public class TcpCacheVerticle extends AbstractVerticle {
     byte[] key = keyBuffer.getBytes(0, keyLength);
     logger.debug("key is {}", new String(key, StandardCharsets.UTF_8));
     cache.del(key);
-    socket.write("success");
+    socket.write(PONG);
   }
 }
