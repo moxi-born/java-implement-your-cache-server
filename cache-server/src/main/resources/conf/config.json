@@ -1,0 +1,21 @@
+{
+  "server" : {
+    "port": 3000,
+    "logActivity": true
+  },
+  "cache" : {
+    "type": "rocksDb",
+    "dbPath": "/tmp/rocks-db",
+    "dbName": "myCache"
+  },
+  "cluster": {
+    "port": 13000,
+    "member": [
+      "127.0.0.1:13000",
+      "127.0.0.1:14000"
+    ]
+  },
+  "endpoint": {
+    "port": 8080
+  }
+}

@@ -1,8 +1,8 @@
 package com.moxib.server;
 
 import com.moxib.cache.Cache;
-import io.vertx.core.AbstractVerticle;
-import io.vertx.core.Promise;
+import io.vertx.core.Vertx;
+import io.vertx.core.http.HttpServer;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
@@ -11,19 +11,24 @@ import org.slf4j.LoggerFactory;
 
 import java.nio.charset.StandardCharsets;
 
-public class HttpCacheVerticle extends AbstractVerticle {
-  private static final Logger logger = LoggerFactory.getLogger(HttpCacheVerticle.class);
+public class HttpEndPoint {
+  private static final Logger logger = LoggerFactory.getLogger(HttpEndPoint.class);
+
   private final Cache cache;
 
-  public HttpCacheVerticle(Cache cache) {
+  private final Vertx vertx;
+
+  private final JsonObject endPointConfig;
+
+  private HttpServer httpServer;
+
+  public HttpEndPoint(Cache cache,  Vertx vertx, JsonObject endPointConfig) {
     this.cache = cache;
+    this.vertx = vertx;
+    this.endPointConfig = endPointConfig;
   }
 
-  // set操作 S<klen><SP><vlen><SP><key><value>
-  // get操作 G<klen><SP><key>
-  // del操作 D<klen><SP><key>
-  @Override
-  public void start(Promise<Void> promise) throws Exception {
+  public void initHttpEndPoint() {
     Router router = Router.router(vertx);
     String prefix = "/cache";
 
@@ -32,9 +37,10 @@ public class HttpCacheVerticle extends AbstractVerticle {
     router.delete(prefix + "/:key").handler(this::delCache);
     router.get(prefix + "/stat/").handler(this::getStat);
 
-    vertx.createHttpServer()
+    httpServer = vertx.createHttpServer();
+    httpServer
       .requestHandler(router)
-      .listen(8080)
+      .listen(endPointConfig.getInteger("port", 8080))
       .onSuccess(success -> logger.info("http cache server start success"))
       .onFailure(err -> logger.error("http cache server start failed", err));
   }
@@ -64,5 +70,13 @@ public class HttpCacheVerticle extends AbstractVerticle {
 
   private void getStat(RoutingContext context) {
     context.response().setStatusCode(200).end(JsonObject.mapFrom(cache.getStat()).toString());
+  }
+
+  public void closeHttpEndPoint() {
+    if (null != httpServer) {
+      httpServer.close()
+        .onSuccess(success -> logger.info("http endpoint close successful"))
+        .onFailure(err -> logger.error("http endpoint close failed"));
+    }
   }
 }

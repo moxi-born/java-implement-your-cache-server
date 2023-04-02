@@ -1,9 +1,9 @@
 package com.moxib.server;
 
 import com.moxib.cache.Cache;
-import io.vertx.core.AbstractVerticle;
-import io.vertx.core.Promise;
+import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
+import io.vertx.core.json.JsonObject;
 import io.vertx.core.net.NetServer;
 import io.vertx.core.net.NetServerOptions;
 import io.vertx.core.net.NetSocket;
@@ -13,32 +13,42 @@ import org.slf4j.LoggerFactory;
 
 import java.nio.charset.StandardCharsets;
 
-public class TcpCacheVerticle extends AbstractVerticle {
-  private static final Logger logger = LoggerFactory.getLogger(TcpCacheVerticle.class);
+public class TcpServer {
+  private static final Logger logger = LoggerFactory.getLogger(TcpServer.class);
+
   private static final Buffer PONG = Buffer.buffer(new byte[]{(byte) 1});
+
+  private final Vertx vertx;
 
   private final Cache cache;
 
-  public TcpCacheVerticle(Cache cache) {
+  private final JsonObject tcpServerConfig;
+
+  private NetServer netServer;
+
+  public TcpServer(Cache cache, Vertx vertx, JsonObject tcpServerConfig) {
     this.cache = cache;
+    this.vertx = vertx;
+    this.tcpServerConfig = tcpServerConfig;
   }
 
   // set操作 S<klen><SP><vlen><SP><key><value>
   // get操作 G<klen><SP><key>
   // del操作 D<klen><SP><key>
-  @Override
-  public void start(Promise<Void> promise) throws Exception {
-    NetServerOptions serverOptions = new NetServerOptions().setLogActivity(true);
-    NetServer server = vertx.createNetServer(serverOptions);
-    server.connectHandler(socket -> {
+  public void initTcpServer() {
+    int port = tcpServerConfig.getInteger("port", 3000);
+    boolean logActivity = tcpServerConfig.getBoolean("logActivity", false);
+    NetServerOptions serverOptions = new NetServerOptions().setLogActivity(logActivity);
+    netServer = vertx.createNetServer(serverOptions);
+    netServer.connectHandler(socket -> {
       // 固定长度模式，获取操作类型，buffer第一个byte
       RecordParser parser = RecordParser.newFixed(1, socket);
       parser.pause();
       parser.fetch(1);
       parser.handler(buffer -> readOperation(buffer, parser, socket));
     });
-    server.listen(12346)
-      .onSuccess(success -> logger.info("cache server startup success at port 12346"))
+    netServer.listen(port)
+      .onSuccess(success -> logger.info("cache server startup success at port {}", port))
       .onFailure(err -> logger.error("cache server startup failed", err));
   }
 
@@ -151,5 +161,13 @@ public class TcpCacheVerticle extends AbstractVerticle {
     logger.debug("key is {}", new String(key, StandardCharsets.UTF_8));
     cache.del(key);
     socket.write(PONG);
+  }
+
+  public void shutDownTcpServer() {
+    if (null != netServer) {
+      netServer.close()
+        .onSuccess(success -> logger.info("tcp server shutdown successful"))
+        .onFailure(err -> logger.error("tcp server shutdown failed"));
+    }
   }
 }

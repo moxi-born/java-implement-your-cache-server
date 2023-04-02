@@ -8,7 +8,7 @@
 
   <logger name="io.netty.handler.logging.LoggingHandler" level="debug"/>
   <logger name="io.vertx" level="info"/>
-  <logger name="com.moxib" level="debug"/>
+  <logger name="com.moxib" level="info"/>
   <root level="debug">
     <appender-ref ref="STDOUT"/>
   </root>
